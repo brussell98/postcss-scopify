@@ -1,34 +1,38 @@
 {
-  "name": "postcss-scopify",
-  "version": "0.1.9",
-  "description": "PostCSS plugin that adds a user input scope to each selector",
-  "keywords": [
-    "postcss",
-    "css",
-    "postcss-plugin",
-    "scope",
-    "scoped css",
-    "css post processing"
-  ],
-  "author": "pazams <maorzams@gmail.com>",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pazams/postcss-scopify.git"
-  },
-  "bugs": {
-    "url": "https://github.com/pazams/postcss-scopify/issues"
-  },
-  "homepage": "https://github.com/pazams/postcss-scopify",
-  "dependencies": {
-    "postcss": "^5.0.0",
-    "postcss-selector-parser": "^6.0.2"
-  },
-  "devDependencies": {
-    "istanbul": "^0.4.5",
-    "mocha": "^3.0.2"
-  },
-  "scripts": {
-    "test": "istanbul cover ./node_modules/mocha/bin/_mocha -- -u exports test/*.js"
-  }
+	"name": "postcss-scopify",
+	"version": "0.2.0",
+	"description": "PostCSS plugin that adds a user input scope to each selector",
+	"keywords": [
+		"postcss",
+		"css",
+		"postcss-plugin",
+		"scope",
+		"scoped css",
+		"css post processing"
+	],
+	"author": "Brussell",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/brussell98/postcss-scopify.git"
+	},
+	"bugs": {
+		"url": "https://github.com/brussell98/postcss-scopify/issues"
+	},
+	"homepage": "https://github.com/brussell98/postcss-scopify",
+	"dependencies": {
+		"eslint": "^7.24.0",
+		"postcss-selector-parser": "^6.0.4"
+	},
+	"peerDependencies": {
+		"postcss": "^8.2.10"
+	},
+	"devDependencies": {
+		"istanbul": "^0.4.5",
+		"mocha": "^3.0.2",
+		"postcss": "^8.2.10"
+	},
+	"scripts": {
+		"test": "istanbul cover ./node_modules/mocha/bin/_mocha -- -u exports test/*.js"
+	}
 }

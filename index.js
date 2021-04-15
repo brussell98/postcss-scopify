@@ -1,56 +1,52 @@
-'use strict';
-var postcss = require('postcss');
-var selectorParser = require('postcss-selector-parser');
+const selectorParser = require('postcss-selector-parser');
 
-var  conditionalGroupRules = ['media','supports','document'];
+const allowedAtRules = ['media', 'supports', 'document'];
 
-module.exports = postcss.plugin('postcss-scopify', scopify);
+module.exports = scope => {
+	// Special case for the '&' selector, resolves to scope
+	const processor = selectorParser(selectors => {
+		let hasNestingSelector = false;
 
-function scopify(scope, options) {
+		selectors.walkNesting(selector => {
+			hasNestingSelector = true;
+			selector.replaceWith(selectorParser.string({ value: scope }));
+		});
 
-    options = options || {};
+		if (!hasNestingSelector)
+			selectors.first.prepend(selectorParser.string({ value: scope + ' ' }));
+	});
 
-    // special case for the '&' selector, resolves to scope
-    var processor = selectorParser(function (selectors) {
-        var hasNestingSelector = false;
-        selectors.walkNesting(function (selector) {
-            hasNestingSelector = true;
-            selector.replaceWith(
-                selectorParser.string({value: scope})
-            );
-        });
-        if (!hasNestingSelector) {
-            selectors.first.prepend(
-                selectorParser.string({value: scope + ' '})
-            );
-        }
-    });
+	if (!isValidScope(scope))
+		throw new Error('Invalid scope');
 
-    return function(root) {
+	function processRule(rule) {
+		if (!isRuleScopable(rule))
+			return rule;
 
-        // guard statment- allow only valid scopes
-        if(!isValidScope(scope)){
-            throw root.error('invalid scope', { plugin: 'postcss-scopify' });
-        }
+		rule.selectors = rule.selectors.map(selector => {
+			if (isScopeApplied(selector, scope))
+				return selector;
 
-        root.walkRules(function (rule) {
+			return processor.processSync(selector);
+		});
+	}
 
-            // skip scoping of special rules (certain At-rules, nested, etc')
-            if(!isRuleScopable(rule)){
-                return rule;
-            }
+	function processAtRule(atRule) {
+		atRule.walkRules(processRule);
+	}
 
-            rule.selectors = rule.selectors.map(function(selector) {
-                if (isScopeApplied(selector,scope)) {
-                    return selector;
-                }
+	return {
+		postcssPlugin: 'postcss-scopify',
+		AtRule: {
+			media: processAtRule,
+			supports: processAtRule,
+			document: processAtRule
+		},
+		Rule: processRule
+	};
+};
 
-                return processor.processSync(selector);
-
-            });
-        });
-    };
-}
+module.exports.postcss = true;
 
 /**
  * Determine if selector is already scoped
@@ -58,9 +54,9 @@ function scopify(scope, options) {
  * @param {string} selector
  * @param {string} scope
  */
-function isScopeApplied(selector,scope) {
-    var selectorTopScope = selector.split(" ",1)[0];
-    return selectorTopScope === scope;
+function isScopeApplied(selector, scope) {
+	const selectorTopScope = selector.split(' ', 1)[0];
+	return selectorTopScope === scope;
 }
 
 /**
@@ -69,13 +65,7 @@ function isScopeApplied(selector,scope) {
  * @param {string} scope
  */
 function isValidScope(scope) {
-    if (scope){
-        return scope.indexOf(',') ===  -1;
-    }
-    else{
-        return false;
-    }
-
+	return scope && !scope.includes(',');
 }
 
 /**
@@ -84,18 +74,11 @@ function isValidScope(scope) {
  * @param {rule} rule
  */
 function isRuleScopable(rule){
+	if (rule.parent.type === 'root')
+		return true;
 
-    if(rule.parent.type !== 'root') {
-        if (rule.parent.type === 'atrule' && conditionalGroupRules.indexOf(rule.parent.name) > -1){
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
+	if (rule.parent.type === 'atrule' && allowedAtRules.includes(rule.parent.name))
+		return true;
 
-    else {
-        return  true;
-    }
-
+	return false;
 }
